@@ -1,46 +1,61 @@
+import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
+  Text,
+  TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import {
   ArrowLeftIcon,
+  CheckCircleIcon,
   EyeIcon,
   EyeSlashIcon,
-  CheckCircleIcon,
 } from "react-native-heroicons/outline";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-// A simple progress bar component
+const getBarStyles = (score: number) => {
+  let color = "#E5E7EB"; // gray-200 (Default)
+  let widthPercent = "0%";
+
+  if (score === 1) {
+    color = "#EF4444"; // red-500
+    widthPercent = "33%";
+  } else if (score === 2) {
+    color = "#F59E0B"; // yellow-500
+    widthPercent = "66%";
+  } else if (score >= 3) {
+    color = "#22C55E"; // green-500 (Full strength)
+    widthPercent = "100%";
+  }
+
+  return { color, widthPercent };
+};
+
 const PasswordStrengthBar = ({ score }: { score: number }) => {
-  const barColor =
-    score === 1 ? "bg-red-500"
-    : score === 2 ? "bg-yellow-500"
-    : score === 3 ? "bg-green-500"
-    : "bg-gray-200";
-  const barWidth =
-    score === 1 ? "w-1/3"
-    : score === 2 ? "w-2/3"
-    : score === 3 ? "w-full"
-    : "w-0";
+  const { color, widthPercent } = getBarStyles(score);
 
   return (
-    <View className="h-2 bg-gray-200 rounded-full w-full overflow-hidden">
+    <View
+      className="h-2 bg-gray-200 rounded-full w-full"
+      style={{ overflow: "hidden" }}
+    >
       <View
-        className={`h-2 rounded-full transition-all duration-300 ${barColor} ${barWidth}`}
+        className="h-2 rounded-full"
+        style={{
+          backgroundColor: color,
+          width: widthPercent as any,
+        }}
       />
     </View>
   );
 };
 
-// Simple check functions
+// Password validation checks
 const hasNumber = (val: string) => /\d/.test(val);
 const hasSymbol = (val: string) => /[!@#$%^&*(),.?":{}|<>]/.test(val);
 const hasMinLength = (val: string) => val.length >= 8;
@@ -57,7 +72,8 @@ export default function CreatePasswordScreen() {
   ];
 
   const strengthScore = checks.filter((c) => c.valid).length;
-  const canContinue = strengthScore === 3;
+  // User can continue only if all checks are passed
+  const canContinue = strengthScore === checks.length;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -68,10 +84,12 @@ export default function CreatePasswordScreen() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View className="flex-1 px-6">
+            {/* Header */}
             <View className="flex-row items-center pt-4 pb-8">
               <TouchableOpacity
                 onPress={() => router.back()}
-                className="p-2 -ml-2"
+                className="p-2"
+                style={{ marginLeft: -8 }}
               >
                 <ArrowLeftIcon size={24} color="#333" />
               </TouchableOpacity>
@@ -79,18 +97,21 @@ export default function CreatePasswordScreen() {
                 Create your password
               </Text>
             </View>
-
-            <View className="flex-row justify-center space-x-2 mb-8">
-              <View className="h-1 w-16 bg-violet-600 rounded-full" />
-              <View className="h-1 w-16 bg-violet-600 rounded-full" />
+            {/* Step Indicators (3/3) */}
+            <View className="flex-row justify-center mb-8">
+              <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
+              <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
               <View className="h-1 w-16 bg-violet-600 rounded-full" />
             </View>
-
+            {/* Password Input */}
             <View className="mb-2">
               <Text className="text-base font-medium text-gray-700 mb-2">
                 Password
               </Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg pr-4">
+              <View
+                className="flex-row items-center rounded-lg pr-4"
+                style={{ borderWidth: 1, borderColor: "#D1D5DB" }}
+              >
                 <TextInput
                   className="flex-1 p-4 text-base"
                   placeholder="Enter password"
@@ -107,40 +128,54 @@ export default function CreatePasswordScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-
+            {/* Strength Bar */}
             <PasswordStrengthBar score={strengthScore} />
-
-            <View className="space-y-3 mt-6">
-              {checks.map((check) => (
-                <View key={check.label} className="flex-row items-center">
+            {/* Requirements List */}
+            <View className="mt-6">
+              {checks.map((check, index) => (
+                <View
+                  key={index}
+                  className="flex-row items-center"
+                  style={{ marginBottom: index < checks.length - 1 ? 12 : 0 }}
+                >
                   <CheckCircleIcon
                     size={20}
                     color={check.valid ? "#22C55E" : "#E5E7EB"}
                   />
                   <Text
-                    className={`ml-3 text-base ${
-                      check.valid ? "text-gray-800" : "text-gray-400"
-                    }`}
+                    className="ml-3 text-base"
+                    style={{ color: check.valid ? "#1F2937" : "#9CA3AF" }}
                   >
                     {check.label}
                   </Text>
                 </View>
               ))}
             </View>
-
             <View className="flex-1" />
-
+            {/* Continue Button */}
             <TouchableOpacity
               onPress={() => router.push("/(auth)/signup-success")}
               disabled={!canContinue}
-              className={`rounded-lg p-4 my-6 shadow-sm ${
-                canContinue ? "bg-violet-600" : "bg-gray-300"
-              }`}
+              className="rounded-lg p-4 my-6 shadow-sm"
+              style={{ backgroundColor: canContinue ? "#7C3AED" : "#D1D5DB" }}
             >
-              <Text className="text-center text-white font-semibold text-lg">
+              <Text className="text-center text-white font-bold text-lg">
                 Continue
               </Text>
             </TouchableOpacity>
+            {/* Footer */}
+            <View className="mb-6">
+              <Text className="text-gray-500 text-sm text-center">
+                By using Classroom, you agree to the{" "}
+                <Link href="/terms" className="text-violet-600 font-bold">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-violet-600 font-bold">
+                  Privacy Policy.
+                </Link>
+              </Text>
+            </View>
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

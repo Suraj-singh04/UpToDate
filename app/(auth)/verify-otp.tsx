@@ -1,15 +1,15 @@
-import React, { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  Keyboard,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
+  Keyboard,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { ArrowLeftIcon } from "react-native-heroicons/outline";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
@@ -51,9 +51,9 @@ export default function VerifyOtpScreen() {
             </Text>
           </View>
 
-          <View className="flex-row justify-center space-x-2 mb-8">
-            <View className="h-1 w-16 bg-violet-600 rounded-full" />
-            <View className="h-1 w-16 bg-violet-600 rounded-full" />
+          <View className="flex-row justify-center mb-8">
+            <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
+            <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
             <View className="h-1 w-16 bg-gray-200 rounded-full" />
           </View>
 
@@ -79,13 +79,14 @@ export default function VerifyOtpScreen() {
             ))}
           </View>
 
-          <Link href="/(auth)/signup-success" asChild>
-            <TouchableOpacity className="bg-violet-600 rounded-lg p-4 mb-4 shadow-sm">
-              <Text className="text-center text-white font-semibold text-lg">
-                Verify
-              </Text>
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity
+            className="bg-violet-600 rounded-lg p-4 mb-4 shadow-sm"
+            onPress={() => router.push("/(auth)/create-password")}
+          >
+            <Text className="text-center text-white font-semibold text-lg">
+              Verify
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity className="items-center">
             <Text className="text-violet-600 font-semibold text-base">
