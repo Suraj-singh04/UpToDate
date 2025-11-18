@@ -1,14 +1,16 @@
-// app/_layout.tsx
-
 import { Stack } from "expo-router";
 import React from "react";
-import "./globals.css"; // Make sure your global CSS is imported here
+import { AuthProvider } from "../context/AuthContext"; // 1. Import AuthProvider
+import "./globals.css";
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-    </Stack>
+    <AuthProvider>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </AuthProvider>
   );
 }
