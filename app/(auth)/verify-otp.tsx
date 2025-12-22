@@ -11,11 +11,11 @@ import {
 } from "react-native";
 import { ArrowLeftIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../context/AuthContext"; // <-- FIX: Add this
+import { useAuth } from "../../context/AuthContext";
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
-  const { signUpData } = useAuth(); // <-- FIX: Hook must be inside component
+  const { signUpData } = useAuth();
 
   const [code, setCode] = useState(new Array(5).fill(""));
   const inputsRef = useRef<(TextInput | null)[]>([]);
@@ -38,27 +38,24 @@ export default function VerifyOtpScreen() {
   };
 
   const maskedMobile =
-    signUpData.mobile ?
+    signUpData?.mobile ?
       signUpData.mobile.replace(/.(?=.{3})/g, "*")
     : "*******000";
 
   const handleVerify = () => {
     const fullCode = code.join("");
-
     if (fullCode.length !== 5) {
       Alert.alert("Invalid Code", "Please enter all 5 digits.");
       return;
     }
-
-    // For demo, no actual OTP check
-    router.push("/(auth)/create-password");
+    // Demo OTP: go to create-password and replace so it cannot be stacked
+    router.replace("/(auth)/create-password");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View className="flex-1 px-6">
-          {/* Header */}
           <View className="flex-row items-center pt-4 pb-8">
             <TouchableOpacity
               onPress={() => router.back()}
@@ -71,21 +68,18 @@ export default function VerifyOtpScreen() {
             </Text>
           </View>
 
-          {/* Progress */}
           <View className="flex-row justify-center mb-8">
             <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
             <View className="h-1 w-16 bg-violet-600 rounded-full mr-2" />
             <View className="h-1 w-16 bg-gray-200 rounded-full" />
           </View>
 
-          {/* Message */}
           <Text className="text-base text-gray-600 mb-6 text-center px-4">
             We just sent a 5-digit code to
             <Text className="font-bold text-gray-800"> +91 {maskedMobile}</Text>
             , enter it below:
           </Text>
 
-          {/* Inputs */}
           <Text className="text-base font-medium text-gray-700 mb-2">Code</Text>
           <View className="flex-row justify-between mb-8">
             {code.map((digit, index) => (
@@ -102,24 +96,21 @@ export default function VerifyOtpScreen() {
             ))}
           </View>
 
-          {/* Verify Button */}
           <TouchableOpacity
             className="bg-violet-600 rounded-lg p-4 mb-4 shadow-sm"
-            onPress={handleVerify} // <-- FIX: Validate OTP before navigating
+            onPress={handleVerify}
           >
             <Text className="text-center text-white font-semibold text-lg">
               Verify
             </Text>
           </TouchableOpacity>
 
-          {/* Wrong Number */}
           <TouchableOpacity className="items-center">
             <Text className="text-violet-600 font-semibold text-base">
               Wrong number? Send to different number
             </Text>
           </TouchableOpacity>
 
-          {/* Footer */}
           <View className="absolute bottom-6 left-0 right-0 items-center px-6">
             <Text className="text-gray-500 text-sm text-center">
               By using Classroom, you agree to the{" "}
@@ -128,8 +119,9 @@ export default function VerifyOtpScreen() {
               </Link>{" "}
               and{" "}
               <Link href="/privacy" className="text-violet-600 font-bold">
-                Privacy Policy.
+                Privacy Policy
               </Link>
+              .
             </Text>
           </View>
         </View>

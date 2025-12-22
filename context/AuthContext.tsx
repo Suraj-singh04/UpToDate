@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { Models } from "appwrite";
+import { Models } from "react-native-appwrite";
 import {
   account,
   signOut as appwriteLogout,
   getAccount,
-  getUserProfile as getProfile,
+  getUserProfile,
 } from "../lib/appwrite";
 
 type SignUpData = {
@@ -35,6 +35,7 @@ type AuthContextType = {
   setSignUpData: React.Dispatch<React.SetStateAction<SignUpData>>;
   checkSession: () => Promise<void>;
   logout: () => Promise<void>;
+  isNewUser: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   const [signUpData, setSignUpData] = useState<SignUpData>({
     role: null,
@@ -58,27 +60,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
 
     try {
-      const session = await getAccount();
+      const accountUser = await getAccount();
 
-      if (session) {
-        // 🎉 Active session found
-        setUser(session);
+      if (accountUser) {
+        setUser(accountUser);
         setIsLoggedIn(true);
 
-        const dbProfile = await getProfile(session.$id);
-        setProfile(dbProfile as UserProfile);
-      } else {
-        // User session exists locally but Appwrite sees it as invalid
-        await account.deleteSession("current").catch(() => {});
 
+        const dbProfile = await getUserProfile(accountUser.$id);
+        
+        if (dbProfile) {
+          setProfile(dbProfile as unknown as UserProfile);
+          setIsNewUser(false);
+        } else {
+          // No profile found = New User (via Social Login)
+          setProfile(null);
+          setIsNewUser(true);
+        }
+      } else {
+        // clear stale session
+        await account.deleteSession("current").catch(() => {});
         setUser(null);
         setProfile(null);
+        setIsNewUser(false);
         setIsLoggedIn(false);
       }
-    } catch (error) {
-      // ❗ Any failure = delete stale session
+    } catch {
       await account.deleteSession("current").catch(() => {});
-
       setUser(null);
       setProfile(null);
       setIsLoggedIn(false);
@@ -88,12 +96,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    setIsLoading(true);
     try {
-      await appwriteLogout();
-    } catch {}
-    setUser(null);
-    setProfile(null);
-    setIsLoggedIn(false);
+        await appwriteLogout();
+    } catch (error) {
+        console.error("Logout error (session might be already expired):", error);
+        // We continue to clear local state regardless of server error
+    } finally {
+        setUser(null);
+        setProfile(null);
+        setIsLoggedIn(false);
+        setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -109,6 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSignUpData,
     checkSession,
     logout,
+    isNewUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -116,8 +131,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };

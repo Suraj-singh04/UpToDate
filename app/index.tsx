@@ -79,7 +79,7 @@ export default function HomeScreen() {
                 Already Have an Account?{" "}
               </Text>
               <Link href="/(auth)/sign-in" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.7} className="p-2">
                   <Text className="text-violet-600 text-base font-extrabold">
                     Log in
                   </Text>

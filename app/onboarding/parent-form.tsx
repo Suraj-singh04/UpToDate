@@ -11,48 +11,63 @@ import {
 } from "react-native";
 import {
     ArrowLeftIcon,
-    BriefcaseIcon,
+    CalendarDaysIcon,
     EnvelopeIcon,
+    IdentificationIcon,
     PhoneIcon,
     UserIcon,
 } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../../components/Button";
-import { Input } from "../../../components/Input";
-import { useAuth } from "../../../context/AuthContext";
+import { Button } from "../../components/Button";
+import { Input } from "../../components/Input";
+import { useAuth } from "../../context/AuthContext";
+import { createProfile } from "../../lib/appwrite";
 
-export default function TeacherSignUpForm() {
+export default function ParentOnboardingForm() {
   const router = useRouter();
-  const { setSignUpData } = useAuth();
+  const { user, checkSession } = useAuth();
 
-  // Form state
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  // Form state - prefill from social auth where possible
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [mobile, setMobile] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [dob, setDob] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = async () => {
-    if (!name || !email || !mobile || !employeeId) {
+  const handleCompleteProfile = async () => {
+    if (!name || !email || !mobile || !studentId || !dob) {
       Alert.alert("Missing Information", "Please fill in all fields.");
       return;
+    }
+
+    if (!user?.$id) {
+        Alert.alert("Error", "User session not found. Please log in again.");
+        return;
     }
 
     setIsLoading(true);
     const fullMobile = mobile.startsWith("+91") ? mobile : `+91${mobile}`;
 
-    setSignUpData({
-      role: "teacher",
-      name,
-      email,
-      mobile: fullMobile,
-      employeeId,
-    });
-
     try {
-      router.push("/(auth)/verify-otp");
-    } catch (error) {
-      console.log(error);
+        await createProfile(user.$id, {
+            name,
+            email,
+            mobile: fullMobile,
+            role: "parent",
+            studentId,
+            dob
+        });
+        
+        // Refresh session to get the new profile
+        await checkSession();
+        
+        // Navigation to tabs is handled by AuthContext/Layout usually, 
+        // but explicit replace ensures we go there.
+        router.replace("/(tabs)"); 
+        
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to save profile.");
     } finally {
       setIsLoading(false);
     }
@@ -82,34 +97,36 @@ export default function TeacherSignUpForm() {
 
           <View className="mb-6">
             <Text className="text-3xl font-bold text-gray-900 mb-2">
-              Teacher Profile
+              Complete Profile
             </Text>
             <Text className="text-base text-gray-500">
-              Step 2 of 4 • Verify your credentials to access the classroom.
+              Just a few more details to set up your parent account.
             </Text>
           </View>
 
           <View className="space-y-4">
             <Input
               label="Full Name"
-              placeholder="e.g. Rahul Verma"
+              placeholder="e.g. John Doe"
               value={name}
               onChangeText={setName}
               icon={<UserIcon size={20} color="#6B7280" />}
             />
 
             <Input
-              label="Official School Email"
-              placeholder="name@school.com"
+              label="Email Address"
+              placeholder="name@example.com"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              // If email came from social provider, maybe disable it? 
+              // But for now keeping it editable in case they want a different contact email.
               icon={<EnvelopeIcon size={20} color="#6B7280" />}
             />
 
             <Input
-              label="Mobile Number (For Login)"
+              label="Mobile Number"
               placeholder="9876543210"
               value={mobile}
               onChangeText={setMobile}
@@ -119,18 +136,26 @@ export default function TeacherSignUpForm() {
             />
 
             <Input
-              label="Employee ID / Teacher Code"
-              placeholder="e.g. EMP-9988"
-              value={employeeId}
-              onChangeText={setEmployeeId}
-              icon={<BriefcaseIcon size={20} color="#6B7280" />}
+              label="Child's Admission Number / Student ID"
+              placeholder="e.g. ADM-2023-001"
+              value={studentId}
+              onChangeText={setStudentId}
+              icon={<IdentificationIcon size={20} color="#6B7280" />}
+            />
+
+            <Input
+              label="Child's Date of Birth"
+              placeholder="DD/MM/YYYY"
+              value={dob}
+              onChangeText={setDob}
+              icon={<CalendarDaysIcon size={20} color="#6B7280" />}
             />
           </View>
 
-          <View className="mt-8">
+          <View className="mt-10">
             <Button
-              title="Continue"
-              onPress={handleContinue}
+              title="Complete Setup"
+              onPress={handleCompleteProfile}
               isLoading={isLoading}
               variant="primary"
             />

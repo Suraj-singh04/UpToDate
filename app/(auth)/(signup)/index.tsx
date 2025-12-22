@@ -2,67 +2,84 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import {
-  AcademicCapIcon,
-  ArrowLeftIcon,
-  UserIcon,
+    AcademicCapIcon,
+    ArrowLeftIcon,
+    UserIcon,
 } from "react-native-heroicons/solid";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpRoleScreen() {
   const router = useRouter();
 
+  const RoleCard = ({
+    title,
+    subtitle,
+    icon: Icon,
+    onPress,
+    color = "#8B5CF6",
+  }: any) => (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      className="bg-white border border-gray-100 rounded-3xl p-6 flex-row items-center shadow-sm mb-5"
+      style={{
+        shadowColor: color,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 4,
+      }}
+    >
+      <View className={`p-4 rounded-2xl bg-${color === "#8B5CF6" ? "violet" : "indigo"}-50`}>
+        <Icon size={32} color={color} />
+      </View>
+      <View className="flex-1 ml-5">
+        <Text className="text-xl font-bold text-gray-900">{title}</Text>
+        <Text className="text-sm text-gray-500 mt-1 leading-5">
+          {subtitle}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 px-6">
-        <View className="flex-row items-center pt-4 pb-8">
-          <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-            <ArrowLeftIcon size={24} color="#333" />
+        {/* Header */}
+        <View className="flex-row items-center pt-4 pb-6">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="p-2 -ml-2 rounded-full active:bg-gray-100"
+          >
+            <ArrowLeftIcon size={24} color="#1F2937" />
           </TouchableOpacity>
-          <Text className="text-2xl font-bold text-gray-800 ml-4">
-            Create account
+        </View>
+
+        <View className="mt-2 mb-10">
+          <Text className="text-4xl font-bold text-gray-900 mb-3">
+            Who are you?
+          </Text>
+          <Text className="text-lg text-gray-500">
+            Choose your role to get started with your personalized experience.
           </Text>
         </View>
 
-        <Text className="text-3xl font-bold text-gray-800 mb-3">
-          Are you a...
-        </Text>
-        <Text className="text-base text-gray-600 mb-10">
-          Choose your role to get started. This will help us tailor the
-          experience for you.
-        </Text>
-
-        <View className="space-y-4">
-          {/* Parent Card */}
-          <TouchableOpacity
+        <View>
+          <RoleCard
+            title="Parent"
+            subtitle="Track your child's progress, attendance, and stay connected."
+            icon={UserIcon}
             onPress={() => router.push("/(auth)/(signup)/parent-form")}
-            className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex-row items-center shadow-sm active:border-violet-300"
-          >
-            <View className="bg-violet-100 p-4 rounded-full">
-              <UserIcon size={32} color="#8B5CF6" />
-            </View>
-            <View className="flex-1 ml-5">
-              <Text className="text-xl font-bold text-gray-800">Parent</Text>
-              <Text className="text-sm text-gray-600 mt-1">
-                Track your child's progress and stay connected
-              </Text>
-            </View>
-          </TouchableOpacity>
+            color="#7C3AED" // violet-600
+          />
 
-          {/* Teacher Card */}
-          <TouchableOpacity
+          <RoleCard
+            title="Teacher"
+            subtitle="Manage classes, mark attendance, and organize activities."
+            icon={AcademicCapIcon}
             onPress={() => router.push("/(auth)/(signup)/teacher-form")}
-            className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex-row items-center shadow-sm mt-4 active:border-violet-300"
-          >
-            <View className="bg-violet-100 p-4 rounded-full">
-              <AcademicCapIcon size={32} color="#8B5CF6" />
-            </View>
-            <View className="flex-1 ml-5">
-              <Text className="text-xl font-bold text-gray-800">Teacher</Text>
-              <Text className="text-sm text-gray-600 mt-1">
-                Manage your classes and student activities
-              </Text>
-            </View>
-          </TouchableOpacity>
+            color="#4F46E5" // indigo-600
+          />
         </View>
       </View>
     </SafeAreaView>
