@@ -25,27 +25,57 @@ export { account, client, ID };
 export const createAccount = async (signUpData: any) => {
   try {
     // Step 1: Create Appwrite user
-    const user = await account.create(
-      ID.unique(),
-      signUpData.email,
-      signUpData.password,
-      signUpData.name
-    );
+    try {
+        await account.create(
+            ID.unique(),
+            signUpData.email,
+            signUpData.password,
+            signUpData.name
+        );
+    } catch (error: any) {
+        // If user already exists, we proceed to try logging in. 
+        // If it's another error, we throw it.
+        // Appwrite error types are usually string codes or messages
+        if (!error.message?.includes("already exists") && error.type !== "user_already_exists") {
+             throw error;
+        }
+        // If user exists, we continue to Step 2 (Login & Profile check)
+    }
 
-    // Step 2: Create profile
-    await databases.createDocument(DB_ID, PROFILE_COLLECTION, user.$id, {
-      userId: user.$id,
-      name: signUpData.name,
-      email: signUpData.email,
-      mobile: signUpData.mobile || "",
-      role: signUpData.role || "parent",
-      studentId: signUpData.studentId || "",
-      dob: signUpData.dob || "",
-      registeredMobile: signUpData.registeredMobile || "",
-      employeeId: signUpData.employeeId || "",
-    });
+    // Step 2: Login (Create Session) to allow profile creation permissions
+    // This also verifies the password if the user already existed.
+    await account.createEmailPasswordSession(signUpData.email, signUpData.password);
+    
+    const accountUser = await account.get();
 
-    return user;
+        // Create profile (if not exists)
+    try {
+        await databases.getDocument(DB_ID, PROFILE_COLLECTION, accountUser.$id);
+    } catch (e) {
+        // Profile not found, so create it.
+        const profileData: any = {
+            userId: accountUser.$id,
+            name: signUpData.name,
+            email: signUpData.email,
+            mobile: signUpData.mobile || "",
+            role: signUpData.role || "parent",
+        };
+
+        // Only add optional fields if they have values
+        if (signUpData.studentId) profileData.studentId = signUpData.studentId;
+        if (signUpData.dob) profileData.dob = signUpData.dob;
+        if (signUpData.registeredMobile) profileData.registeredMobile = signUpData.registeredMobile;
+        if (signUpData.employeeId) profileData.employeeId = signUpData.employeeId;
+
+        await databases.createDocument(
+            DB_ID, 
+            PROFILE_COLLECTION, 
+            accountUser.$id, 
+            profileData
+        );
+    }
+
+    return accountUser;
   } catch (error: any) {
     console.error("createAccount error:", error);
     Alert.alert("Error", error.message || "Failed to create account.");
@@ -107,17 +137,20 @@ export const loginWithOAuth = async (provider: OAuthProvider) => {
 // CREATE PROFILE (For Social Login users)
 export const createProfile = async (userId: string, profileData: any) => {
     try {
-        await databases.createDocument(DB_ID, PROFILE_COLLECTION, userId, {
+        const docPayload: any = {
             userId: userId,
             name: profileData.name,
             email: profileData.email,
             mobile: profileData.mobile || "",
             role: profileData.role || "parent",
-            studentId: profileData.studentId || "",
-            dob: profileData.dob || "",
-            registeredMobile: profileData.registeredMobile || "",
-            employeeId: profileData.employeeId || "",
-        });
+        };
+
+        if (profileData.studentId) docPayload.studentId = profileData.studentId;
+        if (profileData.dob) docPayload.dob = profileData.dob;
+        if (profileData.registeredMobile) docPayload.registeredMobile = profileData.registeredMobile;
+        if (profileData.employeeId) docPayload.employeeId = profileData.employeeId;
+
+        await databases.createDocument(DB_ID, PROFILE_COLLECTION, userId, docPayload);
         return true;
     } catch (error: any) {
         console.error("createProfile error:", error);

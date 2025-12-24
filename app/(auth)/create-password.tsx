@@ -1,20 +1,20 @@
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import {
-  CheckCircleIcon,
-  EyeIcon,
-  EyeSlashIcon,
+    CheckCircleIcon,
+    EyeIcon,
+    EyeSlashIcon,
 } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
@@ -45,7 +45,7 @@ const hasMinLength = (val: string) => val.length >= 8;
 
 export default function CreatePasswordScreen() {
   const router = useRouter();
-  const { signUpData } = useAuth();
+  const { signUpData, checkSession } = useAuth();
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -77,9 +77,12 @@ export default function CreatePasswordScreen() {
       }
 
       await createAccount({ ...signUpData, password });
+      
+      // Update local auth context since createAccount now logs us in
+      await checkSession();
 
-      // Navigate to success and replace history so user can't go back
-      router.replace("/(auth)/signup-success");
+      // Navigate to tabs directly
+      router.replace("/(tabs)");
     } catch (error) {
       // createAccount shows its own alert; log for debugging
       console.error("create account error", error);

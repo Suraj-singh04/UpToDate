@@ -17,13 +17,16 @@ function RootLayoutNav() {
     // Check if user is logged in
     if (isLoggedIn) {
       if (isNewUser) {
-        // Redirect to onboarding if new user (no profile) and not already there
-        if (!inOnboarding) {
+        // Only redirect to onboarding if new user (no profile) is trying to access the main app (tabs)
+        // We allow them to stay on 'index' (Welcome) or '(auth)' screens
+        const inTabs = segments[0] === "(tabs)";
+        if (inTabs) {
           router.replace("/onboarding");
         }
       } else {
         // Redirect to tabs if logged in and trying to access auth screens
-        if (inAuthGroup || inOnboarding) {
+        // Also redirect from root index to tabs if fully logged in
+        if (inAuthGroup || inOnboarding || segments.length === 0) {
           router.replace("/(tabs)");
         }
       }

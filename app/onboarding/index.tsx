@@ -4,6 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { AcademicCapIcon, UserGroupIcon } from 'react-native-heroicons/solid';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
 export default function OnboardingRoleSelection() {
   const router = useRouter();
 

@@ -47,13 +47,36 @@ export default function ParentFormScreen() {
     const fullMobile = mobile.startsWith("+91") ? mobile : `+91${mobile}`;
     const fullRegMobile = registeredMobile.startsWith("+91") ? registeredMobile : `+91${registeredMobile}`;
 
+    // Convert DD/MM/YYYY to YYYY-MM-DD
+    const dateParts = dob.split("/");
+    if (dateParts.length !== 3) {
+        Alert.alert("Invalid Date", "Please enter Date of Birth in DD/MM/YYYY format.");
+        setIsLoading(false);
+        return;
+    }
+    
+    // basic validation
+    const day = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10);
+    const year = parseInt(dateParts[2], 10);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year) || day > 31 || month > 12) {
+         Alert.alert("Invalid Date", "Please enter a valid Date of Birth.");
+         setIsLoading(false);
+         return;
+    }
+
+    // specific 2018 check or similar could go here, but keeping it simple for now
+    // Format: YYYY-MM-DD
+    const formattedDob = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
     setSignUpData({
       role: "parent",
       name,
       email,
       mobile: fullMobile,
       studentId,
-      dob,
+      dob: formattedDob, // Send formatted date
       registeredMobile: fullRegMobile,
     });
 
